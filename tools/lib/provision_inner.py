@@ -207,6 +207,7 @@ def main(options: argparse.Namespace) -> int:
 
         if options.is_force or not rabbitmq_is_configured:
             run(["scripts/setup/configure-rabbitmq"])
+            SimpleQueueClient()
         else:
             print("No need to run `scripts/setup/configure-rabbitmq.")
 
