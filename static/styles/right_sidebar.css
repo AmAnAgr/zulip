@@ -202,6 +202,12 @@
     margin-top: 5px;
 }
 
+.right-sidebar-items {
+    .login_button {
+        margin-right: 10px;
+    }
+}
+
 /* This max-width must be synced with message_viewport.is_narrow */
 @media (width < $xl_min) {
     #userlist-toggle {
