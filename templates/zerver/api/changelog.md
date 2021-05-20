@@ -73,6 +73,11 @@ releases.
 
 ## Changes in Zulip 4.0
 
+**Feature level 66**
+
+* [`POST /subscribe`](/api/subscribe): Added a `is_web_public` parameter to
+  determine if the stream to subscribe is web public or not.
+
 **Feature level 65**
 
 No changes; feature level used for Zulip 4.0 release.
