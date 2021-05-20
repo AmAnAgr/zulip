@@ -126,6 +126,14 @@ export const stream_privacy_policy_values = {
                 "Must be invited by a member; new members can only see messages sent after they join; hidden from non-administrator users",
         }),
     },
+    web_public: {
+        code: "web-public",
+        name: $t({defaultMessage: "Web public"}),
+        description: $t({
+            defaultMessage:
+                "Anyone (including guest users) can join; anyone on the internet can view complete message history without creating an account",
+        }),
+    },
 };
 
 export const stream_post_policy_values = {
@@ -543,6 +551,9 @@ export function id_is_subscribed(stream_id) {
 export function get_stream_privacy_policy(stream_id) {
     const sub = sub_store.get(stream_id);
 
+    if (sub.is_web_public) {
+        return stream_privacy_policy_values.web_public.code;
+    }
     if (!sub.invite_only) {
         return stream_privacy_policy_values.public.code;
     }
@@ -550,6 +561,11 @@ export function get_stream_privacy_policy(stream_id) {
         return stream_privacy_policy_values.private.code;
     }
     return stream_privacy_policy_values.private_with_public_history.code;
+}
+
+export function is_web_public(stream_id) {
+    const sub = sub_store.get(stream_id);
+    return sub !== undefined && sub.is_web_public;
 }
 
 export function get_invite_only(stream_name) {

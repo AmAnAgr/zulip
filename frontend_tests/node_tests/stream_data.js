@@ -76,14 +76,27 @@ test("basics", () => {
         is_muted: true,
         invite_only: false,
     };
+    const web_public_stream = {
+        subscribed: false,
+        color: "yellow",
+        name: "web_public_stream",
+        stream_id: 4,
+        is_muted: false,
+        invite_only: false,
+        history_public_to_subscribers: true,
+        is_web_public: true,
+    };
     stream_data.add_sub(denmark);
     stream_data.add_sub(social);
+    stream_data.add_sub(web_public_stream);
     assert.ok(stream_data.all_subscribed_streams_are_in_home_view());
     stream_data.add_sub(test);
     assert.ok(!stream_data.all_subscribed_streams_are_in_home_view());
 
     assert.equal(stream_data.get_sub("denmark"), denmark);
     assert.equal(stream_data.get_sub("Social"), social);
+    assert.equal(stream_data.get_sub("web_public_stream"), web_public_stream);
+    assert.ok(stream_data.is_web_public(web_public_stream.stream_id));
 
     assert.deepEqual(stream_data.home_view_stream_names(), ["social"]);
     assert.deepEqual(stream_data.subscribed_streams(), ["social", "test"]);
@@ -101,6 +114,7 @@ test("basics", () => {
         stream_data.get_stream_privacy_policy(denmark.stream_id),
         "invite-only-public-history",
     );
+    assert.equal(stream_data.get_stream_privacy_policy(web_public_stream.stream_id), "web-public");
 
     assert.ok(stream_data.get_invite_only("social"));
     assert.ok(!stream_data.get_invite_only("unknown"));
