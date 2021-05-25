@@ -4,6 +4,7 @@ import {all_messages_data} from "./all_messages_data";
 import * as channel from "./channel";
 import {Filter} from "./filter";
 import * as huddle_data from "./huddle_data";
+import * as login_to_access from "./login_to_access";
 import * as message_helper from "./message_helper";
 import * as message_list from "./message_list";
 import * as message_lists from "./message_lists";
@@ -189,6 +190,7 @@ export function load_messages(opts) {
     }
     let data = {anchor: opts.anchor, num_before: opts.num_before, num_after: opts.num_after};
 
+    let operators;
     // This block is a hack; structurally, we want to set
     //   data.narrow = opts.msg_list.data.filter.public_operators()
     //
@@ -197,7 +199,8 @@ export function load_messages(opts) {
     // requires a somewhat ugly bundle of conditionals.
     if (opts.msg_list === message_lists.home) {
         if (page_params.narrow_stream !== undefined) {
-            data.narrow = JSON.stringify(page_params.narrow);
+            operators = JSON.stringify(page_params.narrow);
+            data.narrow = JSON.stringify(operators);
         }
         // Otherwise, we don't pass narrow for message_lists.home; this is
         // required because it shares its data with all_msg_list, and
@@ -205,9 +208,24 @@ export function load_messages(opts) {
         // streams and topics even though message_lists.home's in:home
         // operators will filter those.
     } else {
-        let operators = opts.msg_list.data.filter.public_operators();
+        operators = opts.msg_list.data.filter.public_operators();
         if (page_params.narrow !== undefined) {
             operators = operators.concat(page_params.narrow);
+        }
+        data.narrow = JSON.stringify(operators);
+    }
+
+    if (page_params.is_spectator) {
+        // for web-public guests, only queries in streams:web-public narrow are allowed.
+        const web_public_narrow = {operator: "streams", operand: "web-public", negated: false};
+        if (operators === undefined) {
+            operators = [web_public_narrow];
+        } else {
+            if (!Filter.is_web_public_compatible(operators)) {
+                login_to_access.show();
+                return;
+            }
+            operators.push(web_public_narrow);
         }
         data.narrow = JSON.stringify(operators);
     }
@@ -447,37 +465,39 @@ export function initialize(home_view_loaded) {
         cont: load_more,
     });
 
-    if (!page_params.is_spectator) {
-        // In addition to the algorithm above, which is designed to ensure
-        // that we fetch all message history eventually starting with the
-        // first unread message, we also need to ensure that the Recent
-        // Topics page contains the very most recent threads on page load.
-        //
-        // Long term, we'll want to replace this with something that's
-        // more performant (i.e. avoids this unnecessary extra fetch the
-        // results of which are basically discarded) and better represents
-        // more than a few hundred messages' history, but this strategy
-        // allows "Recent topics" to always show current data (with gaps)
-        // on page load; the data will be complete once the algorithm
-        // above catches up to present.
-        //
-        // (Users will see a weird artifact where Recent topics has a gap
-        // between E.g. 6 days ago and 37 days ago while the catchup
-        // process runs, so this strategy still results in problematic
-        // visual artifacts shortly after page load; just more forgiveable
-        // ones).
-        //
-        // This MessageList is defined similarly to home_message_list,
-        // without a `table_name` attached.
-        const recent_topics_message_list = new message_list.MessageList({
-            filter: new Filter([{operator: "in", operand: "home"}]),
-            excludes_muted_topics: true,
-        });
-        load_messages({
-            anchor: "newest",
-            num_before: consts.recent_topics_initial_fetch_size,
-            num_after: 0,
-            msg_list: recent_topics_message_list,
-        });
+    if (page_params.is_spectator) {
+        return;
     }
+
+    // In addition to the algorithm above, which is designed to ensure
+    // that we fetch all message history eventually starting with the
+    // first unread message, we also need to ensure that the Recent
+    // Topics page contains the very most recent threads on page load.
+    //
+    // Long term, we'll want to replace this with something that's
+    // more performant (i.e. avoids this unnecessary extra fetch the
+    // results of which are basically discarded) and better represents
+    // more than a few hundred messages' history, but this strategy
+    // allows "Recent topics" to always show current data (with gaps)
+    // on page load; the data will be complete once the algorithm
+    // above catches up to present.
+    //
+    // (Users will see a weird artifact where Recent topics has a gap
+    // between E.g. 6 days ago and 37 days ago while the catchup
+    // process runs, so this strategy still results in problematic
+    // visual artifacts shortly after page load; just more forgiveable
+    // ones).
+    //
+    // This MessageList is defined similarly to home_message_list,
+    // without a `table_name` attached.
+    const recent_topics_message_list = new message_list.MessageList({
+        filter: new Filter([{operator: "in", operand: "home"}]),
+        excludes_muted_topics: true,
+    });
+    load_messages({
+        anchor: "newest",
+        num_before: consts.recent_topics_initial_fetch_size,
+        num_after: 0,
+        msg_list: recent_topics_message_list,
+    });
 }
