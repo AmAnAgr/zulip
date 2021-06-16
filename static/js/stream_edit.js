@@ -662,22 +662,33 @@ function change_stream_privacy(e) {
     let history_public_to_subscribers;
     let is_web_public;
 
-    if (privacy_setting === stream_data.stream_privacy_policy_values.public.code) {
-        invite_only = false;
-        history_public_to_subscribers = true;
-        is_web_public = false;
-    } else if (privacy_setting === stream_data.stream_privacy_policy_values.private.code) {
-        invite_only = true;
-        history_public_to_subscribers = false;
-        is_web_public = false;
-    } else if (privacy_setting === stream_data.stream_privacy_policy_values.web_public.code) {
-        invite_only = false;
-        history_public_to_subscribers = true;
-        is_web_public = true;
-    } else {
-        invite_only = true;
-        history_public_to_subscribers = true;
-        is_web_public = false;
+    switch (privacy_setting) {
+        case stream_data.stream_privacy_policy_values.public.code: {
+            invite_only = false;
+            history_public_to_subscribers = true;
+            is_web_public = false;
+
+            break;
+        }
+        case stream_data.stream_privacy_policy_values.private.code: {
+            invite_only = true;
+            history_public_to_subscribers = false;
+            is_web_public = false;
+
+            break;
+        }
+        case stream_data.stream_privacy_policy_values.web_public.code: {
+            invite_only = false;
+            history_public_to_subscribers = true;
+            is_web_public = true;
+
+            break;
+        }
+        default: {
+            invite_only = true;
+            history_public_to_subscribers = true;
+            is_web_public = false;
+        }
     }
 
     if (
