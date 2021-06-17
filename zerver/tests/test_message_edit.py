@@ -1740,7 +1740,7 @@ class EditMessageTest(EditMessageTestCase):
                 user_profile_id=non_guest_user.id,
                 message_id=msg_id_to_test_acesss,
             ).count(),
-            0,
+            1,
         )
         self.assertEqual(
             has_message_access(
@@ -1901,7 +1901,7 @@ class EditMessageTest(EditMessageTestCase):
                 user_profile_id=user_losing_access.id,
                 message_id=msg_id,
             ).count(),
-            0,
+            1 if new_stream.is_public() else 0,
         )
         # When the history is shared, UserMessage is not created for the user but the user
         # can see the message.

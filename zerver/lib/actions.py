@@ -6054,10 +6054,23 @@ def do_update_message(
             # Delete UserMessage objects for users who will no
             # longer have access to these messages.  Note: This could be
             # very expensive, since it's N guest users x M messages.
-            UserMessage.objects.filter(
-                user_profile_id__in=[sub.user_profile_id for sub in subs_losing_usermessages],
-                message_id__in=changed_message_ids,
-            ).delete()
+            # For messages moved to public stream, we delete the UserMessages
+            # only for guest users to avoid the cost of doing so for all the users.
+            # `delete_message` event is sent to correctly reflect the state in clients anyway.
+            if new_stream.is_public():
+                UserMessage.objects.filter(
+                    user_profile_id__in=[
+                        sub.user_profile_id
+                        for sub in subs_losing_usermessages
+                        if sub.user_profile.is_guest
+                    ],
+                    message_id__in=changed_message_ids,
+                ).delete()
+            else:
+                UserMessage.objects.filter(
+                    user_profile_id__in=[sub.user_profile_id for sub in subs_losing_usermessages],
+                    message_id__in=changed_message_ids,
+                ).delete()
 
             delete_event: DeleteMessagesEvent = {
                 "type": "delete_message",
