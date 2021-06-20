@@ -643,7 +643,17 @@ export function initialize() {
             e.stopPropagation();
         }
         // Still hide the popovers, however
-        popovers.hide_all();
+        if ($(e.target).is("textarea")) {
+            // This stops formatting buttons popover from hiding when
+            // user selects a range of text in compose box in Firefox.
+            // In Firefox, this event is trigger after popover is
+            // triggered to show while in chrome, it triggers before the popover shows.
+            popovers.hide_all({
+                not_hide_tippy_instances: true,
+            });
+        } else {
+            popovers.hide_all();
+        }
     }
 
     $("body").on("click", "#compose-content", handle_compose_click);
