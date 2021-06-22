@@ -1,5 +1,6 @@
 import autosize from "autosize";
 import $ from "jquery";
+import {wrapSelection} from "text-field-edit";
 
 import {$t} from "./i18n";
 import * as people from "./people";
@@ -121,4 +122,29 @@ export function compute_placeholder_text(opts) {
         return $t({defaultMessage: "Message {recipient_names}"}, {recipient_names});
     }
     return $t({defaultMessage: "Compose your message here"});
+}
+
+export function format_text(textarea, type) {
+    const field = textarea.get(0);
+    const range = textarea.range();
+
+    switch (type) {
+        case "bold":
+            // Ctrl + B: Convert selected text to bold text
+            wrapSelection(field, "**");
+            break;
+        case "italic":
+            // Ctrl + I: Convert selected text to italic text
+            wrapSelection(field, "*");
+            break;
+        case "link":
+            // Ctrl + L: Insert a link to selected text
+            // Select `url`.
+            wrapSelection(field, "[", "](url)");
+
+            range.start = range.end + 3;
+            range.end = range.start + 3;
+            field.setSelectionRange(range.start, range.end);
+            break;
+    }
 }

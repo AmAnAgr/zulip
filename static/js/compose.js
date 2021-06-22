@@ -826,61 +826,22 @@ export function handle_keydown(event, textarea) {
     // key was on. We turn to key to lowercase so the keybindings
     // work regardless of whether Caps Lock was on or not.
     const key = event.key.toLowerCase();
-    const isBold = key === "b";
-    const isItalic = key === "i" && !event.shiftKey;
-    const isLink = key === "l" && event.shiftKey;
+    let type;
+    if (key === "b") {
+        type = "bold";
+    } else if (key === "i" && !event.shiftKey) {
+        type = "italic";
+    } else if (key === "l" && event.shiftKey) {
+        type = "link";
+    }
 
     // detect Cmd and Ctrl key
     const isCmdOrCtrl = common.has_mac_keyboard() ? event.metaKey : event.ctrlKey;
 
-    if ((isBold || isItalic || isLink) && isCmdOrCtrl) {
-        const range = textarea.range();
-        function wrap_text_with_markdown(prefix, suffix) {
-            if (!document.execCommand("insertText", false, prefix + range.text + suffix)) {
-                textarea.range(range.start, range.end).range(prefix + range.text + suffix);
-            }
-            event.preventDefault();
-        }
-
-        if (isBold) {
-            // Ctrl + B: Convert selected text to bold text
-            wrap_text_with_markdown("**", "**");
-            if (!range.length) {
-                textarea.caret(textarea.caret() - 2);
-            }
-        }
-        if (isItalic) {
-            // Ctrl + I: Convert selected text to italic text
-            wrap_text_with_markdown("*", "*");
-            if (!range.length) {
-                textarea.caret(textarea.caret() - 1);
-            }
-        }
-        if (isLink) {
-            // Ctrl + L: Insert a link to selected text
-            wrap_text_with_markdown("[", "](url)");
-            const position = textarea.caret();
-            const txt = textarea[0];
-
-            // Include selected text in between [] parentheses and insert '(url)'
-            // where "url" should be automatically selected.
-            // Position of cursor depends on whether browser supports exec
-            // command or not. So set cursor position accordingly.
-            if (range.length > 0) {
-                if (document.queryCommandEnabled("insertText")) {
-                    txt.selectionStart = position - 4;
-                    txt.selectionEnd = position - 1;
-                } else {
-                    txt.selectionStart = position + range.length + 3;
-                    txt.selectionEnd = position + range.length + 6;
-                }
-            } else {
-                textarea.caret(textarea.caret() - 6);
-            }
-        }
-
+    if (type && isCmdOrCtrl) {
+        compose_ui.format_text(textarea, type);
         compose_ui.autosize_textarea(textarea);
-        return;
+        event.preventDefault();
     }
 }
 
