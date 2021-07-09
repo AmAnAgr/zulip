@@ -7,6 +7,7 @@ module.exports = {
         // Warning: despite appearances, order is significant
         "postcss-nested": {},
         "postcss-extend-rule": {},
+        "postcss-mixins": {},
         "postcss-simple-vars": {
             variables: media_breakpoints,
         },
